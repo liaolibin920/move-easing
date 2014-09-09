@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,  user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>scrollDate</title>
+    <style>
+        *{
+            margin:0px;
+            padding:0px;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            -webkit-touch-callout:none;
+            -webkit-user-select: none;
+            -webkit-appearance:none;
+            outline: none;
+            word-break: break-all;
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+        }
+        html, body{
+            width: 100%;
+            height:100%;
+        }
+        input[type="text"], input[type="email"], input[type="url"], input[type="number"], input[type="password"], textarea{
+            -webkit-user-select: text;
+        }
+        a{
+            text-decoration:none;
+        }
+        ul, ol, li{
+            list-style:none;
+        }
+        img{
+            border:0;
+        }
+        table{
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        /*-------------------------*/
+        body{
+            font-family: "STHeitiSC";
+            font-size: 12px;
+        }
+        .c{
+            zoom:1;
+        }
+        .c:after{
+            content:".";
+            display:block;
+            height:0;
+            clear:both;
+            visibility:hidden;
+        }
+        .fl{
+            float: left!important;
+        }
+        .fr{
+            float: right!important;
+        }
+        .tal{
+            text-align: left!important;
+        }
+        .tac{
+            text-align: center!important;
+        }
+        .tar{
+            text-align: right!important;
+        }
+        /*-------------------------*/
+       .cube{width:150px;height: 150px;background: #333;}
+    </style>
+</head>
+<body>
+<div id="demo" class="cube"></div>
+<script>
+function getEmById(id){
+    return document.getElementById(id);
+}
+var startX,
+    startY,
+    cubeStartX,
+    cubeStartY,
+    startTime,
+    direct,
+    lastX,
+    em = getEmById("demo");
+
+function transition(em,time,distance){
+
+    em.style.transitionTimingFunction = "ease-out";
+    em.style.transitionDuration = time;
+    em.style.webkitTransition =time + "ms cubic-bezier(0.1, 0.57, 0.1, 1)";
+    em.style.webkitTransform= "translate("+ ( distance) +"px,0px)"+" translateZ(0px)";
+}
+getEmById("demo").addEventListener("mousedown",function(e){
+    e.stopPropagation();
+    e.preventDefault();
+
+    //em.setAttribute("style","");
+    startX = e.clientX;
+    startY = e.clientY;
+
+    cubeStartX = em.getBoundingClientRect().left;
+    cubeStartY = em.offsetTop;
+    console.log("mouseDown__"+cubeStartX);
+   // em.style.webkitTransform = "translate("+ cubeStartX +"px,0px)"+" translateZ(0px)";
+    startTime = new Date().getTime();
+    document.addEventListener("mousemove",move,false);
+    document.addEventListener("mouseup",end,false);
+
+},false);
+var movecubex ;
+function move(e){
+    e.stopPropagation();
+    e.preventDefault();
+   // if(e.target != getEmById("demo"))return;
+
+    var x = e.clientX;
+    var y = e.clientY;
+    dx = x - lastX;
+    //em.style.left =  (cubeStartX + (x - startX)) +"px";
+    //em.style.top = (cubeStartY + (y - startY)) +"px";
+    console.log("move_"+ ((cubeStartX + (x - startX))));
+    em.style.webkitTransform = "translate("+ (cubeStartX + (x - startX)) +"px,0px)"+" translateZ(0px)";
+    movecubex = (cubeStartX + (x - startX));
+    lastX = x;
+};
+
+function end(e){
+    e.stopPropagation();
+    e.preventDefault();
+    //if(e.target != getEmById("demo"))return;
+
+    var x = e.clientX;
+    var y = e.clientY;
+    var current = em.getBoundingClientRect().left;//(cubeStartX + (x - startX));
+    var time = new Date().getTime() - startTime;
+    var minScroll = window.innerWidth - em.getBoundingClientRect().right;
+    var maxScroll  = window.innerWidth;
+    var dist = moveSlider(current, cubeStartX, time, minScroll, maxScroll);
+    console.log("dx__"+dx);
+    //console.log((dx&&dx>0 ? dist.destination : -dist.destination ));
+    transition(em, dist.duration, dist.destination);
+    document.removeEventListener("mousemove",move,false);
+    document.removeEventListener("mouseup",end,false);
+
+
+    //lastX = dist.destination;
+   // em.style.left =  (cubeStartX + (x - startX)) +"px";
+    //em.style.webkitTransform = "translate("+ (cubeStartX + (x - startX)) +"px,0px)"+" translateZ(0px)";
+};
+em.addEventListener("webkitTransitionEnd",transitionEnd,false);
+function transitionEnd(){
+    em.style.transitionTimingFunction = "ease-out";
+    em.style.transitionDuration = 0;
+    em.style.webkitTransition =0 + "ms cubic-bezier(0.1, 0.57, 0.1, 1)";
+    //em.style.webkitTransform= "translate("+ (cubeStartX + distance) +"px,0px)"+" translateZ(0px)";
+}
+function moveSlider(current, start, time, lowerMargin, wrapperSize, deceleration){
+    var distance = current - start,
+        speed = Math.abs(distance) / time,
+        destination,
+        duration;
+ //   console.log(distance+"_1_"+speed);
+    deceleration = deceleration === undefined ? 0.0006 : deceleration;
+
+    destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 );
+    duration = speed / deceleration;
+  //  console.log(destination+"_2_"+lowerMargin);
+   /* if ( destination < lowerMargin ) {
+        destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;
+        distance = Math.abs(destination - current);
+        duration = distance / speed;
+        console.log(destination+"___"+duration)
+    } else if ( destination > 0 ) {
+        destination = wrapperSize ? wrapperSize / 2.5 * ( speed / 8 ) : 0;
+        distance = Math.abs(current) + destination;
+        duration = distance / speed;
+        console.log(current)
+    }*/
+  //  console.log(destination+"_3_"+duration);
+    return {
+        destination: Math.round(destination),
+        duration: duration
+    };
+
+}
+</script>
+
+
+
+</body>
+</html>
